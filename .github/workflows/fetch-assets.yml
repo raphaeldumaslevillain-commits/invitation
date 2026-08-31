@@ -1,0 +1,38 @@
+name: Fetch invitation assets
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    if: "!contains(github.event.head_commit.message, '[assets]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download public assets
+        run: |
+          mkdir -p assets
+          curl -L --fail 'https://www.dropbox.com/scl/fi/f5scgdu517wfjg5viq5y3/banderolle-2.svg?rlkey=4ks6omh28kwxbr41zq2ddh6xt&st=kykdsnxu&dl=1' -o assets/banderolle-2.svg
+          curl -L --fail 'https://www.dropbox.com/scl/fi/h7pkcx0lh9moe6ucq3gge/texte.png?rlkey=aiifc5gxoil9k83wsvmk1wiut&st=7jswowf4&dl=1' -o assets/texte.png
+          curl -L --fail 'https://www.dropbox.com/scl/fi/m0sbko5kds7vsvha5d99u/eglise.svg?rlkey=oe3fhb8761fi31uyo6iieykww&st=doxelegz&dl=1' -o assets/eglise.svg
+
+      - name: Validate downloads
+        run: |
+          file assets/*
+          test -s assets/banderolle-2.svg
+          test -s assets/texte.png
+          test -s assets/eglise.svg
+
+      - name: Commit assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/
+          git diff --cached --quiet || git commit -m '[assets] Add invitation images'
+          git push
